@@ -136,7 +136,7 @@ resource "aws_security_group" "wolke7-ecs-sg" {
 
 resource "aws_launch_configuration" "wolke7_ecs_launch_config" {
     image_id             = data.aws_ami.amazon_linux_2.id
-    iam_instance_profile = aws_iam_instance_profile.ecs_agent.name
+    iam_instance_profile = "ecs_agent_instance_profile"
     security_groups      = [aws_security_group.wolke7-ecs-sg.id]
     user_data            = "#!/bin/bash\necho ECS_CLUSTER=wolke7-ecs-cluster >> /etc/ecs/ecs.config"
     instance_type        = "t2.small"
@@ -156,9 +156,37 @@ resource "aws_autoscaling_group" "wolke7_ecs_asg" {
 }
 
 
+# ECS
 
 resource "aws_ecs_cluster" "wolke7-ecs-cluster" {
     name  = "wolke7-ecs-cluster"
+}
+
+data "aws_iam_policy_document" "ecs_agent_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_agent_policy" {
+  role       = aws_iam_role.ecs_agent.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole"
+}
+
+resource "aws_iam_role" "ecs_agent" {
+  name               = "ecs_agent"
+  assume_role_policy = data.aws_iam_policy_document.ecs_agent_policy.json
+}
+
+
+resource "aws_iam_instance_profile" "ecs_agent_instance_profile" {
+  name = "ecs_agent_instance_profile"
+  role = aws_iam_role.ecs_agent.name
 }
 
 
