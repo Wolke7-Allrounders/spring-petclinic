@@ -14,9 +14,27 @@ terraform {
     backend "s3" {
         bucket = "wolke7-terraform-s3"
         key    = "state.tfstate"
+         
     }
+  }
 
-}
+# S3 Bucket wurde vorher angelegt und per Console Versioning aktiviert
+# daher nicht hier auf diese Art:
+# https://letslearndevops.com/2017/07/29/terraform-and-remote-state-with-s3/
+#
+#resource "aws_s3_bucket" "tfstate" {
+#bucket = "wolke7-terraform-s3"
+#acl    = "private"
+#
+#  versioning {
+#    enabled = true
+#  }
+#
+#  lifecycle {
+#    prevent_destroy = true
+#  }
+#}
+
 
 
 # Configure the AWS Provider
@@ -64,6 +82,15 @@ resource "aws_subnet" "private" {
             Environment = "Wolke7-ECS"
   }
 }
+
+# https://aws.amazon.com/de/vpc/faqs/
+# F: Kann sich ein Subnetz über mehrere Availability Zones erstrecken?
+# Nein. Ein Subnetz muss sich innerhalb einer einzigen Availability Zone befinden.
+#
+# OCI - geht
+
+
+
 
 resource "aws_subnet" "public" {
   vpc_id            = aws_vpc.wolke7-ecs-vpc.id
@@ -136,7 +163,7 @@ resource "aws_security_group" "wolke7-ecs-sg" {
 
 resource "aws_launch_configuration" "wolke7_ecs_launch_config" {
     image_id             = data.aws_ami.amazon_linux_2.id
-    iam_instance_profile = "ecs_agent_instance_profile"
+    iam_instance_profile = aws_iam_instance_profile.ecs_agent_instance_profile.name
     security_groups      = [aws_security_group.wolke7-ecs-sg.id]
     user_data            = "#!/bin/bash\necho ECS_CLUSTER=wolke7-ecs-cluster >> /etc/ecs/ecs.config"
     instance_type        = "t2.small"
