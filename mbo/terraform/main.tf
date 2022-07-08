@@ -18,8 +18,8 @@ terraform {
     }
   }
 
-# S3 Bucket wurde vorher angelegt und per Console Versioning aktiviert
-# daher nicht hier auf diese Art:
+# Die Resource "S3 Bucket" wurde vorher angelegt und per Console Versioning aktiviert
+# daher NICHT hier auf diese Art:
 # https://letslearndevops.com/2017/07/29/terraform-and-remote-state-with-s3/
 #
 #resource "aws_s3_bucket" "tfstate" {
@@ -41,27 +41,7 @@ terraform {
 provider "aws" {
 }
 
-# https://learn.hashicorp.com/tutorials/terraform/data-sources
-data "aws_ami" "amazon_linux_2" {
-  most_recent = true
-  owners      = ["amazon"]
-
- filter {
-    name   = "name"
-    values = ["amzn-ami*amazon-ecs-optimized"]
-  }
-
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-}
-
+# Networking
 
 resource "aws_vpc" "wolke7-ecs-vpc" {
     cidr_block = "10.0.0.0/20"
@@ -72,37 +52,86 @@ resource "aws_vpc" "wolke7-ecs-vpc" {
     }
 }
 
-resource "aws_subnet" "private" {
-  vpc_id            = aws_vpc.wolke7-ecs-vpc.id
-  cidr_block              = "10.0.2.0/24"
-  availability_zone       = "eu-central-1c"
-
-  tags = {
-            Name        = "Wolke7-ECS-PRIVSUBNET"
-            Environment = "Wolke7-ECS"
-  }
-}
-
 # https://aws.amazon.com/de/vpc/faqs/
 # F: Kann sich ein Subnetz über mehrere Availability Zones erstrecken?
 # Nein. Ein Subnetz muss sich innerhalb einer einzigen Availability Zone befinden.
 #
 # OCI - geht
 
+# Create Public Subnet1
+resource "aws_subnet" "pub_sub1" {  
+vpc_id                  = aws_vpc.wolke7-ecs-vpc.id  
+cidr_block              = "10.0.2.0/24"
+availability_zone       = "eu-central-1c"
+map_public_ip_on_launch = true  
+tags = {
+            Name        = "Wolke7-ECS-PUB-SUBNET-1"
+            Environment = "Wolke7-ECS"
+      }
+}
+
+# Create Public Subnet2 
+resource "aws_subnet" "pub_sub2" {  
+vpc_id                  = aws_vpc.wolke7-ecs-vpc.id 
+cidr_block              = "10.0.4.0/24"
+availability_zone       = "eu-central-1b" 
+map_public_ip_on_launch = true  
+tags = {
+            Name        = "Wolke7-ECS-PUB-SUBNET-2"
+            Environment = "Wolke7-ECS"
+       }
+}
 
 
-
-resource "aws_subnet" "public" {
-  vpc_id            = aws_vpc.wolke7-ecs-vpc.id
+# Create Private Subnet1
+resource "aws_subnet" "prv_sub1" {
+  vpc_id                  = aws_vpc.wolke7-ecs-vpc.id
   cidr_block              = "10.0.1.0/24"
   availability_zone       = "eu-central-1c"
-  map_public_ip_on_launch = true
-
+  map_public_ip_on_launch = false
   tags = {
-            Name        = "Wolke7-ECS-PUBSUBNET"
+            Name        = "Wolke7-ECS-PRIV-SUBNET-1"
+            Environment = "Wolke7-ECS" 
+ }
+}
+
+# Create Private Subnet2
+resource "aws_subnet" "prv_sub2" {
+  vpc_id                  = aws_vpc.wolke7-ecs-vpc.id
+  cidr_block              = "10.0.3.0/24"
+  availability_zone       = "eu-central-1b"
+  map_public_ip_on_launch = false
+  tags = {
+            Name        = "Wolke7-ECS-PRIV-SUBNET-2"
             Environment = "Wolke7-ECS"
   }
 }
+
+################# old entries
+#
+#resource "aws_subnet" "private" {
+#  vpc_id            = aws_vpc.wolke7-ecs-vpc.id
+#  cidr_block              = "10.0.2.0/24"
+#  availability_zone       = "eu-central-1c"
+#
+#  tags = {
+#            Name        = "Wolke7-ECS-PRIVSUBNET"
+#            Environment = "Wolke7-ECS"
+#  }
+#}
+
+
+#resource "aws_subnet" "public" {
+#  vpc_id            = aws_vpc.wolke7-ecs-vpc.id
+#  cidr_block              = "10.0.1.0/24"
+#  availability_zone       = "eu-central-1c"
+#  map_public_ip_on_launch = true
+#
+#  tags = {
+#            Name        = "Wolke7-ECS-PUBSUBNET"
+#            Environment = "Wolke7-ECS"
+#  }
+#}
 
 
 resource "aws_internet_gateway" "wolke7-ecs-aws-igw" {
@@ -113,7 +142,7 @@ resource "aws_internet_gateway" "wolke7-ecs-aws-igw" {
   }
 }
 
-resource "aws_route_table" "public" {
+resource "aws_route_table" "wolke7-ecs-route-table" {
     vpc_id = aws_vpc.wolke7-ecs-vpc.id
 
     route {
@@ -122,10 +151,22 @@ resource "aws_route_table" "public" {
     }
 }
 
-resource "aws_route_table_association" "route_table_association" {
-    subnet_id      = aws_subnet.public.id
-    route_table_id = aws_route_table.public.id
+# old entry, 1 public subnet
+#resource "aws_route_table_association" "route_table_association" {
+#    subnet_id      = aws_subnet.public.id
+#    route_table_id = aws_route_table.public.id
+#}
+
+resource "aws_route_table_association" "wolke7-ecs-rt1" {
+    subnet_id = aws_subnet.pub_sub1.id
+    route_table_id = aws_route_table.wolke7-ecs-route-table.id
 }
+
+resource "aws_route_table_association" "wolke7-ecs-rt2" {
+    subnet_id = aws_subnet.pub_sub2.id
+    route_table_id = aws_route_table.wolke7-ecs-route-table.id
+}
+
 
 
 # First security group is for the EC2 that will live in ECS cluster. Inbound traffic is narrowed to two ports: 22 for SSH and 443 for HTTPS needed to download the docker image from ECR.
@@ -155,10 +196,58 @@ resource "aws_security_group" "wolke7-ecs-sg" {
 
     egress {
         from_port       = 0
-        to_port         = 65535
-        protocol        = "tcp"
+        to_port         = 0
+        protocol        = "-1"
         cidr_blocks     = ["0.0.0.0/0"]
     }
+}
+
+# Load Balancer
+
+resource "aws_elb" "wolke7-ecs-elb" {
+  name = "wolke7-ecs-elb"
+  security_groups = [aws_security_group.wolke7-ecs-sg.id] # hier will er unbedingt die Klammern !
+  subnets = [aws_subnet.pub_sub1.id,aws_subnet.pub_sub2.id]
+  cross_zone_load_balancing   = true
+
+  health_check {
+    healthy_threshold = 2
+    unhealthy_threshold = 2
+    timeout = 3
+    interval = 30
+    target = "HTTP:80/"
+  }
+
+  listener {
+    lb_port = 80
+    lb_protocol = "http"
+    instance_port = "80"
+    instance_protocol = "http"
+  }
+  }
+
+
+# EC2
+
+# https://learn.hashicorp.com/tutorials/terraform/data-sources
+data "aws_ami" "amazon_linux_2" {
+  most_recent = true
+  owners      = ["amazon"]
+
+ filter {
+    name   = "name"
+    values = ["amzn-ami*amazon-ecs-optimized"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
 }
 
 resource "aws_launch_configuration" "wolke7_ecs_launch_config" {
@@ -172,7 +261,7 @@ resource "aws_launch_configuration" "wolke7_ecs_launch_config" {
 
 resource "aws_autoscaling_group" "wolke7_ecs_asg" {
     name                      = "wolke7_ecs_asg"
-    vpc_zone_identifier       = [aws_subnet.public.id]
+    vpc_zone_identifier       = [aws_subnet.pub_sub1.id,aws_subnet.pub_sub2.id]
     launch_configuration      = aws_launch_configuration.wolke7_ecs_launch_config.name
 
     desired_capacity          = 2
@@ -189,6 +278,11 @@ resource "aws_ecs_cluster" "wolke7-ecs-cluster" {
     name  = "wolke7-ecs-cluster"
 }
 
+resource "aws_iam_role" "ecs_agent" {
+  name               = "ecs_agent"
+  assume_role_policy = data.aws_iam_policy_document.ecs_agent_policy.json
+}
+
 data "aws_iam_policy_document" "ecs_agent_policy" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -203,11 +297,6 @@ data "aws_iam_policy_document" "ecs_agent_policy" {
 resource "aws_iam_role_policy_attachment" "ecs_agent_policy" {
   role       = aws_iam_role.ecs_agent.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole"
-}
-
-resource "aws_iam_role" "ecs_agent" {
-  name               = "ecs_agent"
-  assume_role_policy = data.aws_iam_policy_document.ecs_agent_policy.json
 }
 
 
