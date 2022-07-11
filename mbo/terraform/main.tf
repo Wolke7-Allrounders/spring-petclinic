@@ -166,7 +166,7 @@ resource "aws_alb_listener" "wolke7-ecs-alb-listener" {
 
 resource "aws_alb_target_group" "wolke7-ecs-target-group" {
   name       = "wolke7-ecs-target-group"
-  port       = 80
+  port       = 80                                              # was ist mit Port Mapping ?
   protocol   = "HTTP"
   vpc_id     = "${aws_vpc.wolke7-ecs-vpc.id}"
   depends_on = [aws_alb.wolke7-ecs-alb]
@@ -381,15 +381,20 @@ resource "aws_ecs_service" "wolke7-ecs-petclinic-service" {
   name            = "wolke7-ecs-petclinic-service"
   cluster         = aws_ecs_cluster.wolke7-ecs-cluster.id
   task_definition = aws_ecs_task_definition.wolke7-ecs-petclinic-task-def.arn
-  desired_count   = 1
+  desired_count   = 2
   iam_role        = aws_iam_role.wolke7-ecs-service-role.arn
   depends_on      = [aws_iam_role_policy_attachment.wolke7-ecs-service-attach]
   launch_type     = "EC2"
 
   load_balancer {
-    target_group_arn = aws_alb_target_group.wolke7-ecs-target-group.id
+    target_group_arn = aws_alb_target_group.wolke7-ecs-target-group.arn        # statt .id nun .arn
     container_name   = "petclinic"
-    container_port   = "80"      # ODER doch 8080 , weil PortMapping ?
+    container_port   = "8080"      # doch 8080 , weil PortMapping , Port 80 bringt Fehler
+  }
+
+  network_configuration {
+    subnets = [aws_subnet.pub-sub1.id,aws_subnet.pub-sub2.id]
+    assign_public_ip = true
   }
 
   lifecycle {
@@ -399,6 +404,7 @@ resource "aws_ecs_service" "wolke7-ecs-petclinic-service" {
 
 resource "aws_ecs_task_definition" "wolke7-ecs-petclinic-task-def" {
   family = "petclinic"
+  execution_role_arn = "arn:aws:iam::517204143657:role/ecsTaskExecutionRole" # nicht sicher, ob er das braucht
 
   container_definitions = <<EOF
 [
@@ -410,7 +416,7 @@ resource "aws_ecs_task_definition" "wolke7-ecs-petclinic-task-def" {
         "containerPort": 8080
       }
     ],
-    "cpu": 768,
+    "cpu": 1024,
     "memory": 1024,
     "image": "517204143657.dkr.ecr.eu-central-1.amazonaws.com/wolke7-jki:latest",
     "essential": true,
