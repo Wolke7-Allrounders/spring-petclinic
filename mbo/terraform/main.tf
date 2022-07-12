@@ -382,6 +382,9 @@ resource "aws_ecs_service" "wolke7-ecs-petclinic-service" {
   cluster         = aws_ecs_cluster.wolke7-ecs-cluster.id
   task_definition = aws_ecs_task_definition.wolke7-ecs-petclinic-task-def.arn
   desired_count   = 2
+  # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_service
+  # iam_role        = aws_iam_role.wolke7-ecs-service-role.arn # Task def nun awsvpc, daher keine IAM Role , sonst nur service-linked
+  # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using-service-linked-roles.html
   iam_role        = aws_iam_role.wolke7-ecs-service-role.arn
   depends_on      = [aws_iam_role_policy_attachment.wolke7-ecs-service-attach]
   launch_type     = "EC2"
@@ -404,6 +407,9 @@ resource "aws_ecs_service" "wolke7-ecs-petclinic-service" {
 
 resource "aws_ecs_task_definition" "wolke7-ecs-petclinic-task-def" {
   family = "petclinic"
+  # network_mode             = "awsvpc"   # dann kein Port Mapping
+  network_mode             = "bridge"     # nun service-linked iam role noetig
+
   execution_role_arn = "arn:aws:iam::517204143657:role/ecsTaskExecutionRole" # nicht sicher, ob er das braucht
 
   container_definitions = <<EOF
@@ -535,6 +541,32 @@ resource "aws_iam_role" "wolke7-ecs-service-role" {
 }
 EOF
 }
+
+# wegen service - linked role for the ecs service role
+#resource "aws_iam_role_policy" "wolke7-ecs-service-role-policy" {
+#  name = "wolke7-ecs-service-role-policy"
+#  role = "${aws_iam_role.wolke7-ecs-service-role.name}"
+#
+#  policy = <<EOF
+#  {
+#    "Effect": "Allow",
+#    "Action": [
+#        "iam:CreateServiceLinkedRole"
+#    ],
+#    "Resource": "arn:aws:iam::*:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS*",
+#    "Condition": {"StringLike": {"iam:AWSServiceName": "ecs.amazonaws.com"}}
+#  }
+#EOF
+#}
+
+# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using-service-linked-roles.html
+# wegen service - linked role for the ecs service role
+resource "aws_iam_role_policy" "wolke7-ecs-service-role-policy" {
+  name = "wolke7-ecs-service-role-policy"
+  role = "${aws_iam_role.wolke7-ecs-service-role.name}"
+  policy = "${file("service-linked-policy.json")}"
+}
+
 
 resource "aws_iam_role_policy_attachment" "wolke7-ecs-service-attach" {
   role       = "${aws_iam_role.wolke7-ecs-service-role.name}"
