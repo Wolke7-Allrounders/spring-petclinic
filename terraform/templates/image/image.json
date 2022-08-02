@@ -1,0 +1,22 @@
+[
+  {
+    "name": "testapp",
+    "image": "${app_image}",
+    "cpu": 1024,
+    "memory": 2048,    
+    "links": [],
+    "portMappings": [
+        { 
+            "hostPort": 80,
+            "containerPort": 8080,
+            "protocol": "tcp"
+        }
+    ],
+    "essential": true,
+    "entryPoint": [],
+    "command": [],
+    "environment": [],
+    "mountPoints": [],
+    "volumesFrom": []
+}
+  ]
