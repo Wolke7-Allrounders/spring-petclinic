@@ -13,6 +13,7 @@ resource "aws_launch_configuration" "ecs_launch_config" {
     security_groups      = [aws_security_group.ecs_sg.id]
     user_data            = "#!/bin/bash\necho ECS_CLUSTER=myapp-cluster>> /etc/ecs/ecs.config"
     instance_type        = "t2.medium"
+    key_name             = "ecs_ec2"
 }
 
 
