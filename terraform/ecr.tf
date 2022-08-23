@@ -1,6 +1,6 @@
 # Create ECR repository
 resource "aws_ecr_repository" "test_service" {
-  name = "example-service-name"
+  name = "wolke7-petclinic"
 }
 
 # Build Docker image and push to ECR from folder: ./example-service-directory
