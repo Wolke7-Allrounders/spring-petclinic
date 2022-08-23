@@ -15,7 +15,7 @@ variable "ecs_task_execution_role" {
 }
 
 variable "app_image" {
-  default     = "517204143657.dkr.ecr.eu-central-1.amazonaws.com/wolke7-petclinic:latest"
+  default     = "517204143657.dkr.ecr.eu-central-1.amazonaws.com/wolke7-petclinic:deployment"
   description = "docker image to run in this ECS cluster"
 }
 
