@@ -12,7 +12,7 @@ resource "aws_launch_configuration" "ecs_launch_config" {
     iam_instance_profile = aws_iam_instance_profile.ecs_agent.name
     security_groups      = [aws_security_group.ecs_sg.id]
     user_data            = "#!/bin/bash\necho ECS_CLUSTER=myapp-cluster>> /etc/ecs/ecs.config"
-    instance_type        = "t2.medium"
+    instance_type        = "t2.small"
     key_name             = "wolkenschluessel"
 }
 
@@ -23,7 +23,7 @@ resource "aws_autoscaling_group" "failure_analysis_ecs_asg" {
     vpc_zone_identifier       = [aws_subnet.public[0].id]
     launch_configuration      = aws_launch_configuration.ecs_launch_config.name
 
-    desired_capacity          = 2
+    desired_capacity          = 1
     min_size                  = 1
     max_size                  = 10
     health_check_grace_period = 300
