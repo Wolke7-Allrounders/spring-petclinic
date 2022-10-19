@@ -51,3 +51,4 @@ resource "aws_ecs_service" "test-service" {
 
   depends_on = [aws_alb_listener.testapp, aws_iam_role_policy_attachment.ecs_task_execution_role]
 }
+

@@ -39,12 +39,12 @@ variable "health_check_path" {
 }
 
 variable "fargate_cpu" {
-  default     = "1024"
+  default     = "512"
   description = "fargate instacne CPU units to provision,my requirent 1 vcpu so gave 1024"
 }
 
 variable "fargate_memory" {
-  default     = "2048"
+  default     = "1024"
   description = "Fargate instance memory to provision (in MiB) not MB"
 }
 

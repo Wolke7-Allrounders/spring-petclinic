@@ -6,7 +6,7 @@
  # retention_in_days = 30
 
 # tags = {
- #   Name = "cw-log-group"
+ #   Name = "testapp-log-group"
  # }
 #}
 
