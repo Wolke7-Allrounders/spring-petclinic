@@ -28,13 +28,13 @@ module "alarm-chat-notification" {
   source  = "aloukiala/alarm-chat-notification/aws"
   version = "0.1.0"
   # insert the 1 required variable here
-  teams_webhook_url = "https://opitzcloud.webhook.office.com/webhookb2/6e013f13-75cc-4b3c-8ae4-80d356291016@fda4c7a7-a09a-44fe-aabb-95c1558a3215/IncomingWebhook/57a1d74318134e419a9011749f64ae11/35ac3399-22a5-4b4f-968a-e1a4ef9ba78f"
+  teams_webhook_url = "https://muss_hier_noch_eingesetzt_werden_in_git_gibt_es_wieder_stress"
 }
 
 #module "teams_hook" {
 #    # source = "terraform-aws-alarm-chat-notification/"
 #    source = "alarm-chat-notification"
-#    teams_webhook_url = "https://opitzcloud.webhook.office.com/webhookb2/6e013f13-75cc-4b3c-8ae4-80d356291016@fda4c7a7-a09a-44fe-aabb-95c1558a3215/IncomingWebhook/57a1d74318134e419a9011749f64ae11/35ac3399-22a5-4b4f-968a-e1a4ef9ba78f"
+#    teams_webhook_url = ""
 #}
 
 #resource "aws_cloudwatch_metric_alarm" "api_gtw_latency_alarm" {
