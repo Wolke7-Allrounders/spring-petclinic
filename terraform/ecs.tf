@@ -28,7 +28,7 @@ resource "aws_ecs_task_definition" "test-def" {
   memory                   = var.fargate_memory
   container_definitions    = data.template_file.testapp.rendered
   task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
-}
+  }
 
 resource "aws_ecs_service" "test-service" {
   name            = "testapp-service"

@@ -17,6 +17,14 @@
     "command": [],
     "environment": [],
     "mountPoints": [],
-    "volumesFrom": []
+    "volumesFrom": [],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/wolke7-ecs-demo/petclinic",
+          "awslogs-region": "eu-central-1",
+          "awslogs-stream-prefix": "wolke7-ecs"
+        }
+      }
 }
   ]
