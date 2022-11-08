@@ -34,7 +34,7 @@ module "alarm-chat-notification" {
 #module "teams_hook" {
 #    # source = "terraform-aws-alarm-chat-notification/"
 #    source = "alarm-chat-notification"
-#    teams_webhook_url = ""
+#    teams_webhook_url = "https://opitzcloud.webhook.office.com/webhookb2/6e013f13-75cc-4b3c-8ae4-80d356291016@fda4c7a7-a09a-44fe-aabb-95c1558a3215/IncomingWebhook/57a1d74318134e419a9011749f64ae11/35ac3399-22a5-4b4f-968a-e1a4ef9ba78f"
 #}
 
 #resource "aws_cloudwatch_metric_alarm" "api_gtw_latency_alarm" {
@@ -57,14 +57,15 @@ module "alarm-chat-notification" {
 
 resource "aws_cloudwatch_metric_alarm" "wolke7-mf-RTException-alarm" {
   alarm_name = "wolke7-mf-RTException-alarm"
-  metric_name         = aws_cloudwatch_log_metric_filter.wolke7-metricfilter.name
+  metric_name         = "RuntimeExceptionMetric"
   threshold           = "1"
   statistic           = "Sum"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   datapoints_to_alarm = "1"
-  evaluation_periods  = "5"
+  evaluation_periods  = "1"
   period              = "60"
   namespace           = "ImportantMetrics"
+  treat_missing_data  = "notBreaching"
   alarm_description = "RuntimeExceptionMetric Alarm"
 #  alarm_actions = [module.teams_hook.alarm_sns_topic_arn]
   alarm_actions = [module.alarm-chat-notification.alarm_sns_topic_arn]
